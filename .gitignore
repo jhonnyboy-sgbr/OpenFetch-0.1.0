@@ -1,0 +1,35 @@
+
+# Executaveis e logs
+*.exe
+*.syso
+*.log
+
+# Arquivos gerados pelo Wails
+release/
+build/bin/
+frontend/wailsjs/
+
+# Dependencias e arquivos temporarios
+node_modules/
+frontend/node_modules/
+*.tmp
+*.temp
+*.part
+coverage.out
+*.test
+
+# Configuracoes locais e segredos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.token
+secrets/
+private/
+
+# Arquivos do sistema e editores
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

@@ -1,0 +1,24 @@
+OpenFetch 0.1.0 — Créditos e observações de redistribuição
+
+1) Wails v2: https://github.com/wailsapp/wails
+   Confira os termos/licença na versão escolhida.
+2) yt-dlp: https://github.com/yt-dlp/yt-dlp
+   Os executáveis oficiais empacotados podem ser GPLv3+ e conter código
+   de terceiros. Consulte THIRD_PARTY_LICENSES.txt e a licença da
+   distribuição específica que você incluir no instalador.
+3) FFmpeg: https://ffmpeg.org/legal.html
+   A licença da distribuição binária depende das opções de compilação.
+   Algumas compilações são GPL; consulte as licenças e obrigações de
+   disponibilização de código-fonte correspondentes ao binário distribuído.
+4) Deno: https://github.com/denoland/deno (MIT e licenças de terceiros)
+   Usado como runtime JavaScript local para compatibilidade com alguns sites.
+5) FFmpeg builds: https://www.gyan.dev/ffmpeg/builds/
+
+ATENÇÃO AOS DISTRIBUIDORES:
+Este arquivo informativo NÃO substitui as licenças completas de terceiros.
+Antes de publicar um instalador, reúna as licenças integrais, avisos de
+copyright, ofertas de código-fonte e obrigações aplicáveis aos binários
+selecionados. Revise os termos de uso das plataformas suportadas.
+
+O OpenFetch destina-se a arquivos próprios, de domínio público, ou a
+conteúdos que você tenha autorização para salvar. Não contorna DRM.

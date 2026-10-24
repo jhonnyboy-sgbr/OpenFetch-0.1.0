@@ -1,0 +1,27 @@
+name: Compilar OpenFetch para Windows
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+          cache: false
+      - name: Instalar Inno Setup
+        shell: powershell
+        run: choco install innosetup -y --no-progress
+      - name: Compilar, baixar ferramentas e empacotar
+        shell: powershell
+        run: .\scripts\build-windows.ps1
+      - name: Guardar instalador e edição portátil
+        uses: actions/upload-artifact@v4
+        with:
+          name: OpenFetch-Windows-0.1.0-alpha
+          path: release/
+          if-no-files-found: error

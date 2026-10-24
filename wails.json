@@ -1,0 +1,16 @@
+a{
+  "$schema": "https://wails.io/schemas/config.v2.json",
+  "name": "OpenFetch",
+  "outputfilename": "OpenFetch",
+  "frontend:dir": "frontend",
+  "frontend:install": "",
+  "frontend:build": "",
+  "wailsjsdir": "frontend/wailsjs",
+  "author": { "name": "OpenFetch" },
+  "info": {
+    "companyName": "OpenFetch",
+    "productName": "OpenFetch",
+    "productVersion": "0.1.0",
+    "comments": "Gerenciador de downloads e conversor de mídia"
+  }
+}

@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#0b0e19" />
+  <title>OpenFetch — Downloads do seu jeito</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
+    <symbol id="icon-download" viewBox="0 0 24 24"><path d="M12 3v12m0 0 5-5m-5 5-5-5M4 17v3h16v-3"/></symbol>
+    <symbol id="icon-home" viewBox="0 0 24 24"><path d="m3 10 9-7 9 7v10h-6v-6H9v6H3z"/></symbol>
+    <symbol id="icon-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></symbol>
+    <symbol id="icon-convert" viewBox="0 0 24 24"><path d="M4 7h15l-4-4m4 4-4 4M20 17H5l4-4m-4 4 4 4"/></symbol>
+    <symbol id="icon-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="m10 2-.5 2.2-2 1-2.1-.8-2 3.4 1.6 1.6v2.4L3.4 13.4l2 3.4 2.1-.8 2 1L10 19h4l.5-2 2-1 2.1.8 2-3.4-1.6-1.6V9.4l1.6-1.6-2-3.4-2.1.8-2-1L14 2z"/></symbol>
+    <symbol id="icon-link" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1 0l2-2a5 5 0 1 0-7.1-7.1l-1.2 1.2M14 11a5 5 0 0 0-7.1 0l-2 2A5 5 0 0 0 12 20.1l1.2-1.2"/></symbol>
+    <symbol id="icon-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v10H3z"/></symbol>
+    <symbol id="icon-play" viewBox="0 0 24 24"><path d="m8 4 12 8-12 8z"/></symbol>
+    <symbol id="icon-music" viewBox="0 0 24 24"><path d="M9 18V5l11-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm11-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/></symbol>
+    <symbol id="icon-file" viewBox="0 0 24 24"><path d="M6 2h8l5 5v15H6zM14 2v5h5M9 13h7M9 17h7"/></symbol>
+    <symbol id="icon-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="icon-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5 5 19"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-spark" viewBox="0 0 24 24"><path d="m12 2 2.5 7.5L22 12l-7.5 2.5L12 22l-2.5-7.5L2 12l7.5-2.5z"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l4 2"/></symbol>
+    <symbol id="icon-archive" viewBox="0 0 24 24"><path d="M3 4h18v5H3zM5 9v12h14V9m-10 5h6"/></symbol>
+  </svg>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><div class="brand-mark"><svg class="icon"><use href="#icon-download"/></svg></div><div><strong>Open<span>Fetch</span></strong><small>MEDIA DOWNLOADER</small></div></div>
+      <div class="sidebar-label">ESPAÇO DE TRABALHO</div>
+      <nav aria-label="Menu principal">
+        <button class="nav-item active" data-page="home"><svg class="icon"><use href="#icon-home"/></svg> Visão geral <span class="nav-dot"></span></button>
+        <button class="nav-item" data-page="downloads"><svg class="icon"><use href="#icon-download"/></svg> Downloads <span class="nav-count" id="nav-count">0</span></button>
+        <button class="nav-item" data-page="converter"><svg class="icon"><use href="#icon-convert"/></svg> Conversor</button>
+        <button class="nav-item" data-page="settings"><svg class="icon"><use href="#icon-settings"/></svg> Configurações</button>
+      </nav>
+      <div class="sidebar-bottom">
+        <div class="side-glow"></div>
+        <div class="side-card"><div class="side-card-icon"><svg class="icon"><use href="#icon-spark"/></svg></div><strong>Seu conteúdo, seu ritmo.</strong><p>Um só lugar para gerenciar downloads e conversões.</p><span>VERSÃO 0.1.0</span></div>
+        <div class="side-footer"><span class="online-dot"></span><span id="runtime-label">Verificando recursos...</span></div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar"><div class="breadcrumb"><span>OpenFetch</span><span class="slash">/</span><strong id="page-name">Visão geral</strong></div><div class="top-actions"><span class="version-pill"><span class="pulse"></span> ALPHA 0.1.0</span><button id="top-folder" class="square-btn" title="Abrir pasta de downloads"><svg class="icon"><use href="#icon-folder"/></svg></button></div></header>
+      <div id="preview-notice" class="notice hidden">Prévia visual no navegador. Os downloads são ativados quando o aplicativo é executado no Wails.</div>
+
+      <section class="page" id="page-home">
+        <div class="hero">
+          <div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div><div class="hero-lines"></div>
+          <div class="hero-content"><span class="hero-eyebrow"><svg class="icon"><use href="#icon-spark"/></svg> SEU NOVO HUB DE DOWNLOADS</span><h1>Baixe o que quiser.<br><em>Do seu jeito.</em></h1><p>Vídeos, músicas e arquivos em um só lugar.<br>Rápido, simples e sem complicação.</p></div>
+          <div class="hero-illustration" aria-hidden="true"><div class="floating-card fc-back"><svg class="icon"><use href="#icon-music"/></svg><span></span><span></span></div><div class="floating-card fc-main"><div class="fc-symbol"><svg class="icon"><use href="#icon-download"/></svg></div><div class="fc-line"></div><div class="fc-line short"></div><div class="fc-meter"><span></span></div></div><div class="fc-badge">↓</div></div>
+        </div>
+
+        <div class="section-title"><div><h2>Novo download <span class="heading-glow">✦</span></h2><p>Cole um link para começar. Nós cuidamos do resto.</p></div></div>
+        <div class="action-card">
+          <label for="link-input" class="mini-label">LINK DO CONTEÚDO</label>
+          <div class="url-row"><div class="url-icon"><svg class="icon"><use href="#icon-link"/></svg></div><input id="link-input" type="url" placeholder="https://exemplo.com/video-ou-arquivo" autocomplete="off" spellcheck="false"/><button id="analyze-btn" class="primary-btn"><span id="analyze-text">Analisar link</span><svg class="icon"><use href="#icon-arrow"/></svg></button></div>
+          <div class="input-foot"><span><span class="foot-dot"></span> Compatível com links diretos e sites reconhecidos pelo extrator</span><span>HTTP / HTTPS</span></div>
+          <div id="probe-box" class="probe-box hidden">
+            <img id="probe-thumb" class="probe-thumb hidden" alt="Miniatura" referrerpolicy="no-referrer"/><div class="probe-icon" id="probe-icon"><svg class="icon"><use href="#icon-play"/></svg></div>
+            <div class="probe-data"><strong id="probe-title"></strong><span id="probe-desc"></span></div>
+          </div>
+          <div class="format-head"><span class="mini-label">COMO DESEJA BAIXAR?</span><span class="format-hint">Selecione o formato</span></div>
+          <div class="format-grid"><button id="format-video" class="format-card selected" data-format="video"><span class="format-icon purple"><svg class="icon"><use href="#icon-play"/></svg></span><span><strong>Vídeo</strong><small>Qualidade personalizada</small></span><span class="format-radio"></span></button><button id="format-audio" class="format-card" data-format="audio"><span class="format-icon pink"><svg class="icon"><use href="#icon-music"/></svg></span><span><strong>Áudio MP3</strong><small>Somente o áudio</small></span><span class="format-radio"></span></button><button id="format-file" class="format-card" data-format="file"><span class="format-icon blue"><svg class="icon"><use href="#icon-file"/></svg></span><span><strong>Arquivo</strong><small>Formato original</small></span><span class="format-radio"></span></button></div>
+          <div class="download-bar"><div class="quality-group"><label for="quality-select">QUALIDADE</label><select id="quality-select"><option value="best">Melhor disponível</option><option value="1080">Até 1080p</option><option value="720">Até 720p</option><option value="480">Até 480p</option></select></div><button class="primary-btn download-btn" id="start-btn"><svg class="icon"><use href="#icon-download"/></svg> Iniciar download</button></div>
+        </div>
+
+        <div class="section-title recent-title"><div><h2>Atividade recente</h2><p>Acompanhe seus últimos downloads</p></div><button class="text-btn" data-navigate="downloads">Ver todos <svg class="icon"><use href="#icon-arrow"/></svg></button></div>
+        <div class="download-list" id="recent-list"></div>
+      </section>
+
+      <section class="page hidden" id="page-downloads">
+        <div class="page-heading"><div class="page-chip">SUA BIBLIOTECA</div><h1>Seus downloads</h1><p>Tudo o que você baixou e converteu, organizado aqui.</p></div>
+        <div class="stats-grid"><div class="stat-card"><span>NO HISTÓRICO</span><strong id="stat-all">0</strong><small>Transferências registradas</small></div><div class="stat-card"><span>CONCLUÍDOS</span><strong id="stat-done">0</strong><small>Arquivos prontos</small></div><div class="stat-card"><span>EM ANDAMENTO</span><strong id="stat-active">0</strong><small>Downloads e conversões</small></div></div>
+        <div class="panel-head"><h2>Histórico completo</h2><button class="outlined-btn" id="downloads-folder"><svg class="icon"><use href="#icon-folder"/></svg> Abrir pasta</button></div><div class="download-list" id="all-list"></div>
+      </section>
+
+      <section class="page hidden" id="page-converter">
+        <div class="page-heading"><div class="page-chip">FERRAMENTAS DE MÍDIA</div><h1>Conversor de arquivos</h1><p>Transforme seus vídeos e áudios sem enviar arquivos para a nuvem.</p></div>
+        <div class="converter-card"><div class="converter-art"><div class="convert-icon"><svg class="icon"><use href="#icon-convert"/></svg></div><div class="convert-ring"></div></div><h2>Converta em segundos</h2><p>Escolha um vídeo ou áudio salvo no seu computador.<br>O arquivo convertido será salvo na sua pasta do OpenFetch.</p><button class="outlined-btn" id="choose-media"><svg class="icon"><use href="#icon-folder"/></svg> Selecionar arquivo</button><div class="chosen-file" id="chosen-file">Nenhum arquivo selecionado</div><div class="convert-bottom"><div class="quality-group"><label for="convert-format">FORMATO DE SAÍDA</label><select id="convert-format"><option value="mp3">MP3 — Áudio</option><option value="mp4">MP4 — Vídeo</option></select></div><button class="primary-btn" id="convert-start"><svg class="icon"><use href="#icon-convert"/></svg> Converter arquivo</button></div></div>
+        <p class="fineprint">Conversão local usando FFmpeg. A qualidade final depende da fonte e das opções do codec.</p>
+      </section>
+
+      <section class="page hidden" id="page-settings">
+        <div class="page-heading"><div class="page-chip">PREFERÊNCIAS</div><h1>Configurações</h1><p>O OpenFetch do seu jeito.</p></div>
+        <div class="settings-box"><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-folder"/></svg></div><div class="settings-copy"><strong>Pasta de downloads</strong><p id="folder-path">Carregando...</p></div><button id="change-folder" class="outlined-btn">Alterar pasta</button></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-grid"/></svg></div><div class="settings-copy"><strong>Componentes instalados</strong><p id="tools-description">Verificando FFmpeg e yt-dlp...</p></div><span id="tools-status" class="status-chip">—</span></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-archive"/></svg></div><div class="settings-copy"><strong>Histórico local</strong><p>Informações de download ficam salvas apenas neste computador.</p></div><span class="status-chip">Ativo</span></div></div>
+        <div class="settings-tip"><svg class="icon"><use href="#icon-spark"/></svg> O OpenFetch não contorna DRM. Baixe somente conteúdos que você tem permissão para salvar.</div>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script src="./app.js" defer></script>
+</body>
+</html>
