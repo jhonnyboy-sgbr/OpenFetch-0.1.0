@@ -3,12 +3,121 @@ package main
 import (
 	"errors"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 	"time"
 )
+
+func TestVideoFormatSelectorUsesCompatibleFormatsAndResolution(t *testing.T) {
+	tests := []struct {
+		quality string
+		want    string
+	}{
+		{
+			quality: "best",
+			want:    "bv[vcodec^=avc1]+ba[acodec^=mp4a]/b[vcodec^=avc1][acodec^=mp4a][ext=mp4]",
+		},
+		{
+			quality: "1080",
+			want:    "bv[vcodec^=avc1][height<=1080]+ba[acodec^=mp4a]/b[vcodec^=avc1][acodec^=mp4a][ext=mp4][height<=1080]",
+		},
+		{
+			quality: "720",
+			want:    "bv[vcodec^=avc1][height<=720]+ba[acodec^=mp4a]/b[vcodec^=avc1][acodec^=mp4a][ext=mp4][height<=720]",
+		},
+		{
+			quality: "480",
+			want:    "bv[vcodec^=avc1][height<=480]+ba[acodec^=mp4a]/b[vcodec^=avc1][acodec^=mp4a][ext=mp4][height<=480]",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.quality, func(t *testing.T) {
+			if got := videoFormatSelector(test.quality); got != test.want {
+				t.Errorf("videoFormatSelector(%q) = %q, want %q", test.quality, got, test.want)
+			}
+			args := buildMediaArgs(Job{Kind: "video", Quality: test.quality}, "staging", "", "", "")
+			formatIndex := -1
+			mergeIndex := -1
+			for index, arg := range args {
+				if arg == "-f" {
+					formatIndex = index
+				}
+				if arg == "--merge-output-format" {
+					mergeIndex = index
+				}
+			}
+			if formatIndex < 0 || formatIndex+1 >= len(args) || args[formatIndex+1] != test.want {
+				t.Errorf("video args do not use the expected selector: %v", args)
+			}
+			if mergeIndex < 0 || mergeIndex+1 >= len(args) || args[mergeIndex+1] != "mp4" {
+				t.Errorf("video args do not preserve MP4 output: %v", args)
+			}
+		})
+	}
+}
+
+func TestUnavailableVideoFormatErrorIsClearAndScoped(t *testing.T) {
+	err := unavailableVideoFormatError(
+		Job{Kind: "video", Quality: "720"},
+		"ERROR: Requested format is not available. Use --list-formats for a list of available formats",
+	)
+	if err == nil {
+		t.Fatal("unavailable compatible video formats did not produce a user-facing error")
+	}
+	for _, want := range []string{"H.264/AVC", "AAC", "reduzir o limite de resolução"} {
+		if !strings.Contains(err.Error(), want) {
+			t.Errorf("error %q does not contain %q", err, want)
+		}
+	}
+
+	if got := unavailableVideoFormatError(Job{Kind: "audio"}, "Requested format is not available"); got != nil {
+		t.Errorf("audio format error was rewritten as video compatibility error: %v", got)
+	}
+	if got := unavailableVideoFormatError(Job{Kind: "video"}, "network timeout"); got != nil {
+		t.Errorf("unrelated download error was rewritten as format error: %v", got)
+	}
+}
+
+func TestBuildMediaArgsKeepsAudioFormatAndCookies(t *testing.T) {
+	args := buildMediaArgs(Job{Kind: "audio"}, "staging", "", "", "temporary-cookie-file")
+	for _, want := range []string{"-x", "--audio-format", "mp3", "--audio-quality", "0", "--cookies", "temporary-cookie-file"} {
+		if !containsArgument(args, want) {
+			t.Errorf("audio arguments %v do not contain %q", args, want)
+		}
+	}
+	if containsArgument(args, "--merge-output-format") || containsArgument(args, "-f") {
+		t.Errorf("audio arguments unexpectedly contain video format selection: %v", args)
+	}
+}
+
+func TestDownloadHTTPFileFlowUnaffectedByVideoFormatSelection(t *testing.T) {
+	content := []byte("controlled local file response")
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Length", fmt.Sprint(len(content)))
+		_, _ = w.Write(content)
+	}))
+	defer server.Close()
+
+	folder := t.TempDir()
+	app := &App{configPath: filepath.Join(t.TempDir(), "state.json")}
+	job := Job{ID: "file-job", URL: server.URL + "/sample.bin", Kind: "file"}
+	output, err := app.downloadHTTP(t.Context(), job, folder)
+	if err != nil {
+		t.Fatalf("downloadHTTP() error = %v", err)
+	}
+	got, err := os.ReadFile(output)
+	if err != nil {
+		t.Fatalf("could not read downloaded test file: %v", err)
+	}
+	if string(got) != string(content) {
+		t.Errorf("downloaded file = %q, want %q", got, content)
+	}
+}
 
 func TestResolveMediaOutput(t *testing.T) {
 	existingPath := filepath.Join(t.TempDir(), "media.mp4")

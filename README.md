@@ -6,7 +6,7 @@ Gerenciador desktop de downloads para Windows 10/11. Projeto Wails v2 + Go com i
 
 - Interface escura com páginas **Visão geral**, **Downloads**, **Conversor** e **Configurações**.
 - Análise de URLs de mídia via `yt-dlp` (`--dump-single-json`) e reconhecimento de links diretos de arquivos.
-- Download de mídia com vídeo (melhor qualidade / limites de resolução) ou extração MP3 via `yt-dlp` + `FFmpeg`, com runtime JS `Deno` empacotado para melhorar suporte a sites que exigem processamento JavaScript.
+- Download de vídeo MP4 priorizando H.264/AVC e AAC, com melhor qualidade disponível dentro do limite selecionado; não há transcodificação, e fontes sem formatos compatíveis são recusadas. Extração MP3 via `yt-dlp` + `FFmpeg`, com runtime JS `Deno` empacotado para melhorar suporte a sites que exigem processamento JavaScript.
 - Seleção opcional de arquivo de cookies Netscape para análise e download do YouTube; a seleção dura apenas até fechar o aplicativo.
 - Download de arquivos HTTP(S) com indicador de progresso, arquivo temporário, verificação do tamanho recebido e cancelamento.
 - Fila de até 2 operações simultâneas, progresso de mídia, histórico local (JSON) e pasta configurável.
@@ -56,6 +56,7 @@ O script:
 ## Limitações conhecidas desta alpha
 
 - Links com restrições, login, captcha, DRM, geobloqueio ou sites não suportados pelo yt-dlp podem falhar.
+- A seleção H.264/AVC + AAC melhora a compatibilidade dos MP4s com players do Windows, mas a reprodução ainda pode depender dos codecs instalados e do player usado.
 - Playlists, vídeos privados e integrações com navegador ainda não estão implementados.
 - Downloads de arquivos comuns não têm retomada por HTTP Range nesta versão. Downloads incompletos são descartados.
 - Apenas formatos MP3 e MP4 estão disponíveis para conversão, e o MP4 exige codecs presentes no FFmpeg usado.

@@ -991,6 +991,9 @@ func (a *App) downloadMedia(ctx context.Context, job Job, folder string) ([]medi
 	resolvedPaths, fallbackUsed, resolveErr := resolveMediaOutputsWithCandidates(capturedPaths, lastError, err, candidatePaths, os.Stat)
 	logMediaDiagnostic(job.ID, "output_path_fallback", fmt.Sprintf("used=%t", fallbackUsed))
 	if resolveErr != nil {
+		if err := unavailableVideoFormatError(job, lastError); err != nil {
+			return nil, err
+		}
 		if cookieTempPath != "" {
 			return nil, errors.New(normalizedCookieDownloadError(lastError))
 		}
@@ -1029,11 +1032,22 @@ func buildMediaArgs(job Job, stagingFolder, denoPath, ffmpegDir, cookieTempPath 
 	if job.Kind == "audio" {
 		args = append(args, "-x", "--audio-format", "mp3", "--audio-quality", "0")
 	} else {
-		selector := "bv*+ba/b"
-		if job.Quality != "best" {
-			selector = "bv*[height<=" + job.Quality + "]+ba/b[height<=" + job.Quality + "]"
-		}
-		args = append(args, "-f", selector, "--merge-output-format", "mp4")
+		args = append(args, "-f", videoFormatSelector(job.Quality), "--merge-output-format", "mp4")
 	}
 	return cookieArgs(args, cookieTempPath)
+}
+
+func videoFormatSelector(quality string) string {
+	heightFilter := ""
+	if quality != "best" {
+		heightFilter = "[height<=" + quality + "]"
+	}
+	return "bv[vcodec^=avc1]" + heightFilter + "+ba[acodec^=mp4a]/b[vcodec^=avc1][acodec^=mp4a][ext=mp4]" + heightFilter
+}
+
+func unavailableVideoFormatError(job Job, lastError string) error {
+	if job.Kind != "video" || !strings.Contains(strings.ToLower(lastError), "requested format is not available") {
+		return nil
+	}
+	return errors.New("não há formato MP4 compatível com H.264/AVC e AAC na qualidade selecionada; tente reduzir o limite de resolução ou escolher outro vídeo")
 }
