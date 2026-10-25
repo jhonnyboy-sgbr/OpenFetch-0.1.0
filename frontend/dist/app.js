@@ -3,7 +3,7 @@
 const q = (selector) => document.querySelector(selector);
 const qa = (selector) => [...document.querySelectorAll(selector)];
 const api = () => window.go && window.go.main && window.go.main.App;
-const state = { page: 'home', format: 'video', jobs: [], settings: null, tools: null, source: null, mediaFile: '' };
+const state = { page: 'home', format: 'video', jobs: [], settings: null, tools: null, source: null, mediaFile: '', cookiesSelected: false };
 const icons = {video:'icon-play',audio:'icon-music',file:'icon-file',convert:'icon-convert'};
 const translations = {queued:'Na fila',downloading:'Baixando',converting:'Processando',completed:'Concluído',failed:'Falhou',cancelled:'Cancelado',interrupted:'Interrompido'};
 let toastTimer;
@@ -48,7 +48,10 @@ async function analyze() {
     state.source = info;
     q('#probe-box').classList.remove('hidden');
     q('#probe-title').textContent = info.title || 'Arquivo identificado';
-    q('#probe-desc').textContent = `${info.host || 'Origem'} · ${info.kind === 'video' ? `Vídeo · ${fmtDuration(info.duration)}` : `Arquivo · ${fmtBytes(info.size)}`}`;
+    const description = info.isPlaylist
+      ? `Playlist${info.itemCount > 0 ? ` · ${info.itemCount} vídeos` : ''}`
+      : info.kind === 'video' ? `Vídeo · ${fmtDuration(info.duration)}` : `Arquivo · ${fmtBytes(info.size)}`;
+    q('#probe-desc').textContent = `${info.host || 'Origem'} · ${description}`;
     const thumb = q('#probe-thumb'); thumb.classList.add('hidden');
     const iconEl = q('#probe-icon'); iconEl.classList.remove('hidden');
     if (info.thumbnail && /^https?:\/\//i.test(info.thumbnail)) {
@@ -96,6 +99,11 @@ function renderState(s) {
   state.jobs = Array.isArray(s.jobs) ? s.jobs : [];
   state.settings = s.settings || null;
   state.tools = s.tools || null;
+  state.cookiesSelected = Boolean(s.cookiesSelected);
+  q('#cookies-status').textContent = state.cookiesSelected
+    ? 'Arquivo selecionado para esta sessão; o caminho não é salvo.'
+    : 'Desativados nesta sessão. O arquivo original não será alterado.';
+  q('#remove-cookies').disabled = !state.cookiesSelected;
   if (state.settings) q('#folder-path').textContent = state.settings.downloadDir || 'Não definida';
   if (state.tools) {
     const t = state.tools;
@@ -115,6 +123,20 @@ async function folder() { try { await call('OpenDownloadDir'); } catch (err) { t
 async function chooseFolder() {
   try { const dir = await call('ChooseDownloadDir'); if(dir) { toast('Pasta de downloads atualizada.'); await refresh(); } }
   catch (err) { toast(errorText(err)); }
+}
+async function chooseCookies() {
+  try {
+    const selected = await call('ChooseCookiesFile');
+    if (selected) toast('Arquivo de cookies selecionado para esta sessão.');
+    await refresh();
+  } catch(err) { toast(errorText(err)); }
+}
+async function removeCookies() {
+  try {
+    await call('RemoveCookiesFile');
+    toast('Cookies removidos desta sessão.');
+    await refresh();
+  } catch(err) { toast(errorText(err)); }
 }
 async function chooseMedia() {
   try {
@@ -142,6 +164,8 @@ function init() {
   q('#top-folder').addEventListener('click', folder);
   q('#downloads-folder').addEventListener('click', folder);
   q('#change-folder').addEventListener('click', chooseFolder);
+  q('#choose-cookies').addEventListener('click', chooseCookies);
+  q('#remove-cookies').addEventListener('click', removeCookies);
   q('#choose-media').addEventListener('click', chooseMedia);
   q('#convert-start').addEventListener('click', convertMedia);
   document.addEventListener('click', (event) => { const b=event.target.closest('[data-cancel]'); if(b) cancelJob(b.dataset.cancel); });

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 	"path/filepath"
 	"sync"
@@ -43,21 +44,24 @@ type ToolsInfo struct {
 }
 
 type Snapshot struct {
-	Version  string    `json:"version"`
-	Settings Settings  `json:"settings"`
-	Jobs     []Job     `json:"jobs"`
-	Tools    ToolsInfo `json:"tools"`
+	Version         string    `json:"version"`
+	Settings        Settings  `json:"settings"`
+	Jobs            []Job     `json:"jobs"`
+	Tools           ToolsInfo `json:"tools"`
+	CookiesSelected bool      `json:"cookiesSelected"`
 }
 
 type App struct {
-	ctx        context.Context
-	mu         sync.RWMutex
-	fileMu     sync.Mutex
-	jobs       []Job
-	cancels    map[string]context.CancelFunc
-	settings   Settings
-	sem        chan struct{}
-	configPath string
+	ctx                 context.Context
+	mu                  sync.RWMutex
+	fileMu              sync.Mutex
+	jobs                []Job
+	cancels             map[string]context.CancelFunc
+	settings            Settings
+	sem                 chan struct{}
+	configPath          string
+	selectedCookiesPath string
+	jobCookies          map[string]string
 }
 
 func NewApp() *App {
@@ -75,8 +79,18 @@ func NewApp() *App {
 		settings:   Settings{DownloadDir: filepath.Join(home, "Downloads", "OpenFetch"), MaxParallel: 2},
 		cancels:    make(map[string]context.CancelFunc),
 		sem:        make(chan struct{}, 2),
+		jobCookies: make(map[string]string),
 	}
 	app.load()
+	if cacheDir, err := cookieCacheDirectory(); err != nil {
+		log.Printf("openfetch_cookie_temp_cleanup error_type=%T", err)
+	} else if err := os.MkdirAll(cacheDir, 0700); err != nil {
+		log.Printf("openfetch_cookie_temp_cleanup error_type=%T", err)
+	} else if err := restrictPrivateDirectory(cacheDir); err != nil {
+		log.Printf("openfetch_cookie_temp_cleanup error_type=%T", err)
+	} else if err := cleanupStaleCookieCopies(cacheDir, time.Now()); err != nil {
+		log.Printf("openfetch_cookie_temp_cleanup error_type=%T", err)
+	}
 	return app
 }
 
@@ -95,7 +109,14 @@ func (a *App) GetState() Snapshot {
 	defer a.mu.RUnlock()
 	jobs := make([]Job, len(a.jobs))
 	copy(jobs, a.jobs)
-	return Snapshot{Version: appVersion, Jobs: jobs, Settings: a.settings, Tools: getTools()}
+	selectedCookies := a.selectedCookiesPath != ""
+	return Snapshot{
+		Version:         appVersion,
+		Jobs:            jobs,
+		Settings:        a.settings,
+		Tools:           getTools(),
+		CookiesSelected: selectedCookies,
+	}
 }
 
 func (a *App) ChooseDownloadDir() (string, error) {

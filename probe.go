@@ -15,13 +15,31 @@ import (
 )
 
 type ProbeResult struct {
-	Kind      string  `json:"kind"`
-	Title     string  `json:"title"`
-	Thumbnail string  `json:"thumbnail"`
-	Duration  float64 `json:"duration"`
-	Host      string  `json:"host"`
-	Size      int64   `json:"size"`
-	URL       string  `json:"url"`
+	Kind       string  `json:"kind"`
+	Title      string  `json:"title"`
+	Thumbnail  string  `json:"thumbnail"`
+	Duration   float64 `json:"duration"`
+	Host       string  `json:"host"`
+	Size       int64   `json:"size"`
+	URL        string  `json:"url"`
+	IsPlaylist bool    `json:"isPlaylist"`
+	ItemCount  int     `json:"itemCount"`
+}
+
+type probeMetadata struct {
+	Type      string            `json:"_type"`
+	Title     string            `json:"title"`
+	Thumbnail string            `json:"thumbnail"`
+	Duration  float64           `json:"duration"`
+	Entries   []json.RawMessage `json:"entries"`
+}
+
+func parseProbeMetadata(data []byte) (probeMetadata, error) {
+	var metadata probeMetadata
+	if err := json.Unmarshal(data, &metadata); err != nil {
+		return probeMetadata{}, errors.New("a resposta da fonte não pôde ser interpretada")
+	}
+	return metadata, nil
 }
 
 func (a *App) Probe(raw string) (ProbeResult, error) {
@@ -46,10 +64,20 @@ func (a *App) Probe(raw string) (ProbeResult, error) {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 40*time.Second)
 	defer cancel()
-	args := []string{"--no-playlist", "--no-warnings", "--dump-single-json", "--skip-download"}
-	if deno := findTool("deno"); deno != "" {
-		args = append(args, "--js-runtimes", "deno:"+deno)
+	cookieTempPath := ""
+	if selectedPath := a.currentCookiesPath(); selectedPath != "" {
+		cacheDir, err := cookieCacheDirectory()
+		if err != nil {
+			return ProbeResult{}, errors.New("o arquivo de cookies selecionado não está acessível")
+		}
+		var cleanup func()
+		cookieTempPath, cleanup, err = createYouTubeCookieCopy(selectedPath, cacheDir)
+		if err != nil {
+			return ProbeResult{}, err
+		}
+		defer cleanup()
 	}
+	args := buildProbeArgs(findTool("deno"), cookieTempPath)
 	args = append(args, "--", u.String())
 	cmd := exec.CommandContext(ctx, yt, args...)
 	out, err := cmd.Output()
@@ -57,15 +85,22 @@ func (a *App) Probe(raw string) (ProbeResult, error) {
 		return ProbeResult{}, errors.New("tempo limite excedido ao analisar o link")
 	}
 	if err != nil {
+		var exitErr *exec.ExitError
+		if errors.As(err, &exitErr) && isAuthenticationRequired(exitErr.Stderr) {
+			if cookieTempPath != "" {
+				return ProbeResult{}, errors.New("o YouTube ainda exige autenticação; verifique se os cookies selecionados são válidos")
+			}
+			return ProbeResult{}, errors.New("a plataforma exige autenticação para analisar este conteúdo")
+		}
+		if cookieTempPath != "" {
+			return ProbeResult{}, errors.New("não foi possível analisar o conteúdo usando os cookies selecionados")
+		}
 		return ProbeResult{}, fmt.Errorf("não foi possível identificar um vídeo nesse link: %w", err)
 	}
-	var meta struct {
-		Title     string  `json:"title"`
-		Thumbnail string  `json:"thumbnail"`
-		Duration  float64 `json:"duration"`
-	}
-	if json.Unmarshal(out, &meta) != nil {
-		return ProbeResult{}, errors.New("a resposta da fonte não pôde ser interpretada")
+
+	meta, err := parseProbeMetadata(out)
+	if err != nil {
+		return ProbeResult{}, err
 	}
 	result.Kind = "video"
 	if strings.TrimSpace(meta.Title) != "" {
@@ -73,7 +108,32 @@ func (a *App) Probe(raw string) (ProbeResult, error) {
 	}
 	result.Thumbnail = meta.Thumbnail
 	result.Duration = meta.Duration
+	result.IsPlaylist = meta.Type == "playlist" || meta.Entries != nil
+	if result.IsPlaylist {
+		result.ItemCount = len(meta.Entries)
+	}
 	return result, nil
+}
+
+func buildProbeArgs(denoPath, cookieTempPath string) []string {
+	args := []string{"--flat-playlist", "--no-warnings", "--dump-single-json", "--skip-download"}
+	if denoPath != "" {
+		args = append(args, "--js-runtimes", "deno:"+denoPath)
+	}
+	return cookieArgs(args, cookieTempPath)
+}
+
+func (a *App) currentCookiesPath() string {
+	a.mu.RLock()
+	defer a.mu.RUnlock()
+	return a.selectedCookiesPath
+}
+
+func isAuthenticationRequired(stderr []byte) bool {
+	message := strings.ToLower(string(stderr))
+	return strings.Contains(message, "sign in to confirm") ||
+		strings.Contains(message, "authentication is required") ||
+		strings.Contains(message, "login required")
 }
 
 func probeDirect(p ProbeResult) (ProbeResult, error) {

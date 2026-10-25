@@ -7,6 +7,7 @@ Gerenciador desktop de downloads para Windows 10/11. Projeto Wails v2 + Go com i
 - Interface escura com páginas **Visão geral**, **Downloads**, **Conversor** e **Configurações**.
 - Análise de URLs de mídia via `yt-dlp` (`--dump-single-json`) e reconhecimento de links diretos de arquivos.
 - Download de mídia com vídeo (melhor qualidade / limites de resolução) ou extração MP3 via `yt-dlp` + `FFmpeg`, com runtime JS `Deno` empacotado para melhorar suporte a sites que exigem processamento JavaScript.
+- Seleção opcional de arquivo de cookies Netscape para análise e download do YouTube; a seleção dura apenas até fechar o aplicativo.
 - Download de arquivos HTTP(S) com indicador de progresso, arquivo temporário, verificação do tamanho recebido e cancelamento.
 - Fila de até 2 operações simultâneas, progresso de mídia, histórico local (JSON) e pasta configurável.
 - Conversão local para MP3 ou MP4 via `FFmpeg`.
@@ -67,5 +68,7 @@ O script:
 ## Segurança e privacidade
 
 Somente URLs HTTP(S) são aceitas. Arquivos comuns são baixados para uma pasta com nomes higienizados; mídias são processadas pelo yt-dlp sem invocar um shell. Seu histórico é salvo em `%AppData%/OpenFetch/state.json`. URLs privadas e tokens em query string podem constar no histórico: evite compartilhá-lo.
+
+Cookies do YouTube são opcionais e permanecem selecionados apenas durante a sessão atual. O OpenFetch valida o formato Netscape, copia somente cookies de domínios `youtube.com` para uma pasta temporária com permissões restritas e remove a cópia após cada operação; cópias antigas remanescentes de encerramentos inesperados são removidas na inicialização após 24 horas. O arquivo original não é alterado, e o caminho não é salvo em configurações, histórico ou logs. Cookies são credenciais de sessão: selecione apenas um arquivo exportado por você e remova a seleção ao terminar.
 
 A licença e o plano de distribuição do OpenFetch ainda precisam de decisão. Consulte `docs/LICENCAS-E-CREDITOS.txt` antes de redistribuir compilados com FFmpeg, Deno e yt-dlp.
