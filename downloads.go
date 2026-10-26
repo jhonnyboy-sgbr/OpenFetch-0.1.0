@@ -89,14 +89,13 @@ func (a *App) runDownload(ctx context.Context, job Job) {
 		return
 	}
 	a.updateJob(job.ID, func(j *Job) { j.Status = "downloading"; j.Detail = "Conectando..." })
-	folder := a.GetState().Settings.DownloadDir
-	if err := os.MkdirAll(folder, 0755); err != nil {
+	folder, err := outputFolder(a.GetState().Settings.DownloadDir, job)
+	if err != nil {
 		a.finishJob(job.ID, "failed", "Erro ao criar pasta", "", err)
 		return
 	}
 	var out string
 	var mediaFiles []mediaFinalFile
-	var err error
 	if job.Kind == "file" {
 		out, err = a.downloadHTTP(ctx, job, folder)
 	} else {
@@ -115,6 +114,34 @@ func (a *App) runDownload(ctx context.Context, job Job) {
 		return
 	}
 	a.finishMediaJobs(job.ID, mediaFiles)
+}
+
+func outputFolder(base string, job Job) (string, error) {
+	category := ""
+	switch job.Kind {
+	case "video":
+		category = "Vídeos"
+	case "audio":
+		category = "Áudios"
+	case "file":
+		category = "Arquivos"
+	case "convert":
+		switch strings.ToUpper(job.Format) {
+		case "MP3":
+			category = "Áudios"
+		case "MP4":
+			category = "Vídeos"
+		default:
+			return "", errors.New("formato de conversão inválido")
+		}
+	default:
+		return "", errors.New("tipo de saída inválido")
+	}
+	folder := filepath.Join(base, category)
+	if err := os.MkdirAll(folder, 0755); err != nil {
+		return "", fmt.Errorf("não foi possível criar a pasta de saída: %w", err)
+	}
+	return folder, nil
 }
 
 func (a *App) finishMediaJobs(id string, files []mediaFinalFile) {
@@ -302,6 +329,22 @@ func parseMediaOutputPath(line string) (string, bool) {
 		return "", false
 	}
 	return strings.TrimSpace(strings.TrimPrefix(line, "OF_FILE:")), true
+}
+
+func parseMediaProgressPercent(line string) (float64, bool) {
+	parts := strings.SplitN(line, "|", 3)
+	if len(parts) != 3 {
+		return 0, false
+	}
+	match := percentRe.FindStringSubmatch(parts[0])
+	if len(match) < 2 {
+		return 0, false
+	}
+	value, err := strconv.ParseFloat(match[1], 64)
+	if err != nil {
+		return 0, false
+	}
+	return value, true
 }
 
 func resolveMediaOutput(outputPath, lastError string, commandErr error) (string, error) {
@@ -911,11 +954,9 @@ func (a *App) downloadMedia(ctx context.Context, job Job, folder string) ([]medi
 		if strings.Contains(strings.ToLower(line), "error:") {
 			lastError = sanitizeMediaDiagnosticMessage(redactCookieTempPath(line, cookieTempPath), outputPath)
 		}
-		if strings.HasPrefix(line, "download:") {
-			parts := strings.SplitN(strings.TrimPrefix(line, "download:"), "|", 3)
-			pct := percentRe.FindStringSubmatch(parts[0])
-			if len(pct) > 1 && time.Since(last) >= 150*time.Millisecond {
-				value, _ := strconv.ParseFloat(pct[1], 64)
+		parts := strings.SplitN(line, "|", 3)
+		if value, ok := parseMediaProgressPercent(line); ok {
+			if time.Since(last) >= 150*time.Millisecond {
 				detail := "Baixando mídia"
 				if len(parts) >= 3 {
 					detail = strings.TrimSpace(parts[1]) + " · ETA " + strings.TrimSpace(parts[2])
@@ -1022,7 +1063,7 @@ func (a *App) downloadMedia(ctx context.Context, job Job, folder string) ([]medi
 }
 
 func buildMediaArgs(job Job, stagingFolder, denoPath, ffmpegDir, cookieTempPath string) []string {
-	args := []string{"--no-playlist", "--no-overwrites", "--newline", "--no-warnings", "--progress-template", "download:%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s", "--print", "after_move:OF_FILE:%(filepath)s", "-P", stagingFolder, "-o", "%(title).150B [%(id)s].%(ext)s"}
+	args := []string{"--no-playlist", "--no-overwrites", "--newline", "--progress", "--no-warnings", "--progress-template", "download:%(progress._percent_str)s|%(progress._speed_str)s|%(progress._eta_str)s", "--print", "after_move:OF_FILE:%(filepath)s", "-P", stagingFolder, "-o", "%(title).150B [%(id)s].%(ext)s"}
 	if denoPath != "" {
 		args = append(args, "--js-runtimes", "deno:"+denoPath)
 	}

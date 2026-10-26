@@ -1,4 +1,4 @@
-a{
+{
   "$schema": "https://wails.io/schemas/config.v2.json",
   "name": "OpenFetch",
   "outputfilename": "OpenFetch",

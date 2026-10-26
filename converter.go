@@ -54,8 +54,8 @@ func (a *App) ConvertMedia(input, format string) (Job, error) {
 			return
 		}
 		a.updateJob(job.ID, func(j *Job) { j.Status = "converting"; j.Detail = "Convertendo mídia..." })
-		folder := a.GetState().Settings.DownloadDir
-		if err := os.MkdirAll(folder, 0755); err != nil {
+		folder, err := outputFolder(a.GetState().Settings.DownloadDir, job)
+		if err != nil {
 			a.finishJob(job.ID, "failed", "Erro", "", err)
 			return
 		}
@@ -69,7 +69,7 @@ func (a *App) ConvertMedia(input, format string) (Job, error) {
 		}
 		args = append(args, output)
 		cmd := exec.CommandContext(ctx, findTool("ffmpeg"), args...)
-		err := cmd.Run()
+		err = cmd.Run()
 		if ctx.Err() != nil {
 			_ = os.Remove(output)
 			a.finishJob(job.ID, "cancelled", "Cancelado", "", nil)

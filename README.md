@@ -9,6 +9,7 @@ Gerenciador desktop de downloads para Windows 10/11. Projeto Wails v2 + Go com i
 - Download de vídeo MP4 priorizando H.264/AVC e AAC, com melhor qualidade disponível dentro do limite selecionado; não há transcodificação, e fontes sem formatos compatíveis são recusadas. Extração MP3 via `yt-dlp` + `FFmpeg`, com runtime JS `Deno` empacotado para melhorar suporte a sites que exigem processamento JavaScript.
 - Seleção opcional de arquivo de cookies Netscape para análise e download do YouTube; a seleção dura apenas até fechar o aplicativo.
 - Download de arquivos HTTP(S) com indicador de progresso, arquivo temporário, verificação do tamanho recebido e cancelamento.
+- Novos downloads são organizados em subpastas **Vídeos**, **Áudios** e **Arquivos** dentro da pasta configurada; conversões MP4 e MP3 são salvas na pasta correspondente. Arquivos já existentes não são movidos.
 - Fila de até 2 operações simultâneas, progresso de mídia, histórico local (JSON) e pasta configurável.
 - Conversão local para MP3 ou MP4 via `FFmpeg`.
 - Botão de abertura da pasta de downloads e persistência do histórico entre sessões.

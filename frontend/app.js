@@ -25,7 +25,7 @@ function switchPage(page) {
   state.page = page;
   qa('.page').forEach(el => el.classList.toggle('hidden', el.id !== `page-${page}`));
   qa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
-  q('#page-name').textContent = ({home:'Visão geral',downloads:'Downloads',converter:'Conversor',settings:'Configurações'})[page];
+  q('#page-name').textContent = ({home:'Home',downloads:'Downloads',converter:'Conversor',settings:'Configurações'})[page];
 }
 function chooseFormat(format) {
   state.format = format;
@@ -69,21 +69,27 @@ async function startDownload() {
   const btn = q('#start-btn'); btn.disabled = true;
   try {
     await call('StartDownload', url, state.format, q('#quality-select').value);
-    toast('Download adicionado à fila!'); switchPage('downloads'); await refresh();
+    toast('Download adicionado à fila!'); await refresh();
   } catch(err) { toast(errorText(err)); }
   finally { btn.disabled = false; }
 }
 function jobMarkup(j) {
   const running = ['queued','downloading','converting'].includes(j.status);
+  const repeatable = ['completed','failed','cancelled','interrupted'].includes(j.status);
+  const repeatLabel = j.status === 'completed' ? 'Baixar novamente' : 'Tentar novamente';
   const pct = Math.min(100, Math.max(0, Number(j.progress) || 0));
   const file = j.filePath ? j.filePath : j.error ? j.error : j.detail || '';
   const subtitle = j.bytesTotal > 0 ? `${fmtBytes(j.bytesDone)} / ${fmtBytes(j.bytesTotal)}` : file;
+  const indeterminate = running && j.status !== 'queued' && pct === 0;
+  const progress = running
+    ? `<div class="job-progress"><div class="progress-track${indeterminate ? ' indeterminate' : ''}" role="progressbar" aria-label="Progresso de ${escapeHTML(j.title)}" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Math.round(pct)}"><span style="width:${indeterminate ? '35%' : `${pct}%`}"></span></div><span class="progress-label">${j.status === 'queued' ? 'Na fila' : `${Math.round(pct)}%`}</span></div>`
+    : '';
   return `<article class="job-row">
     <div class="job-icon">${icon(icons[j.kind] || 'icon-file')}</div>
-    <div class="job-data"><div class="job-title" title="${escapeHTML(j.title)}">${escapeHTML(j.title)}</div><div class="job-sub" title="${escapeHTML(file)}"><span>${escapeHTML(j.format || '')}</span><span>•</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(subtitle)}</span></div></div>
-    ${running && j.status !== 'queued' ? `<div class="progress-track" title="${Math.round(pct)}%"><span style="width:${pct}%"></span></div>` : ''}
-    <span class="job-status ${escapeHTML(j.status)}">${escapeHTML(translations[j.status] || j.status)} ${running && j.status !== 'queued' && pct > 0 ? Math.round(pct) + '%' : ''}</span>
-    ${running ? `<button class="job-cancel" data-cancel="${escapeHTML(j.id)}" title="Cancelar">${icon('icon-close')}</button>` : ''}
+    <div class="job-data"><div class="job-title" title="${escapeHTML(j.title)}">${escapeHTML(j.title)}</div><div class="job-sub" title="${escapeHTML(file)}"><span>${escapeHTML(j.format || '')}</span><span>•</span><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escapeHTML(subtitle)}</span></div>${progress}</div>
+    <div class="job-actions"><span class="job-status ${escapeHTML(j.status)}">${escapeHTML(translations[j.status] || j.status)}</span>
+    ${running ? `<button class="job-cancel" data-cancel="${escapeHTML(j.id)}" aria-label="Cancelar download" title="Cancelar">${icon('icon-close')}</button>` : ''}
+    ${repeatable ? `<button class="job-repeat" data-repeat="${escapeHTML(j.id)}" aria-label="${repeatLabel}" title="${repeatLabel}">${icon('icon-repeat')}</button>` : ''}</div>
   </article>`;
 }
 function renderJobs() {
@@ -152,6 +158,17 @@ async function convertMedia() {
   finally { btn.disabled = false; }
 }
 async function cancelJob(id) { try { await call('CancelDownload', id); toast('Solicitação de cancelamento enviada.'); } catch(err) { toast(errorText(err)); } }
+async function repeatJob(id) {
+  const job = state.jobs.find(item => item.id === id);
+  if (!job || !['completed','failed','cancelled','interrupted'].includes(job.status)) {
+    return toast('Este download não pode ser repetido agora.');
+  }
+  try {
+    await call('StartDownload', job.url, job.kind, job.quality);
+    toast(job.status === 'completed' ? 'Novo download adicionado à fila.' : 'Nova tentativa adicionada à fila.');
+    await refresh();
+  } catch(err) { toast(errorText(err)); }
+}
 
 function init() {
   qa('.nav-item').forEach(b => b.addEventListener('click', () => switchPage(b.dataset.page)));
@@ -168,7 +185,12 @@ function init() {
   q('#remove-cookies').addEventListener('click', removeCookies);
   q('#choose-media').addEventListener('click', chooseMedia);
   q('#convert-start').addEventListener('click', convertMedia);
-  document.addEventListener('click', (event) => { const b=event.target.closest('[data-cancel]'); if(b) cancelJob(b.dataset.cancel); });
+  document.addEventListener('click', (event) => {
+    const repeat = event.target.closest('[data-repeat]');
+    if (repeat) return repeatJob(repeat.dataset.repeat);
+    const cancel = event.target.closest('[data-cancel]');
+    if (cancel) cancelJob(cancel.dataset.cancel);
+  });
   if (window.runtime && typeof window.runtime.EventsOn === 'function') window.runtime.EventsOn('openfetch:update', refresh);
   if (!api()) { q('#preview-notice').classList.remove('hidden'); q('#runtime-label').textContent = 'Prévia visual'; }
   else refresh();

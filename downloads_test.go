@@ -12,6 +12,34 @@ import (
 	"time"
 )
 
+func TestParseMediaProgressPercent(t *testing.T) {
+	tests := []struct {
+		name   string
+		line   string
+		want   float64
+		wantOK bool
+	}{
+		{name: "integer percentage without template type marker", line: "42%|1.2MiB/s|00:10", want: 42, wantOK: true},
+		{name: "decimal percentage without template type marker", line: "42.5%|1.2MiB/s|00:10", want: 42.5, wantOK: true},
+		{name: "percentage with template type marker", line: "download: 42%|1.2MiB/s|00:10", want: 42, wantOK: true},
+		{name: "non-progress output", line: "OF_FILE:C:\\media.mp4"},
+		{name: "missing percentage", line: "NA|1.2MiB/s|00:10"},
+		{name: "incomplete progress output", line: "42%|1.2MiB/s"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, ok := parseMediaProgressPercent(test.line)
+			if ok != test.wantOK {
+				t.Fatalf("parseMediaProgressPercent() ok = %t, want %t", ok, test.wantOK)
+			}
+			if ok && got != test.want {
+				t.Errorf("parseMediaProgressPercent() = %v, want %v", got, test.want)
+			}
+		})
+	}
+}
+
 func TestVideoFormatSelectorUsesCompatibleFormatsAndResolution(t *testing.T) {
 	tests := []struct {
 		quality string
@@ -41,6 +69,9 @@ func TestVideoFormatSelectorUsesCompatibleFormatsAndResolution(t *testing.T) {
 				t.Errorf("videoFormatSelector(%q) = %q, want %q", test.quality, got, test.want)
 			}
 			args := buildMediaArgs(Job{Kind: "video", Quality: test.quality}, "staging", "", "", "")
+			if !containsArgument(args, "--progress") {
+				t.Errorf("video args do not force yt-dlp progress output: %v", args)
+			}
 			formatIndex := -1
 			mergeIndex := -1
 			for index, arg := range args {
@@ -85,7 +116,7 @@ func TestUnavailableVideoFormatErrorIsClearAndScoped(t *testing.T) {
 
 func TestBuildMediaArgsKeepsAudioFormatAndCookies(t *testing.T) {
 	args := buildMediaArgs(Job{Kind: "audio"}, "staging", "", "", "temporary-cookie-file")
-	for _, want := range []string{"-x", "--audio-format", "mp3", "--audio-quality", "0", "--cookies", "temporary-cookie-file"} {
+	for _, want := range []string{"--progress", "-x", "--audio-format", "mp3", "--audio-quality", "0", "--cookies", "temporary-cookie-file"} {
 		if !containsArgument(args, want) {
 			t.Errorf("audio arguments %v do not contain %q", args, want)
 		}
@@ -116,6 +147,61 @@ func TestDownloadHTTPFileFlowUnaffectedByVideoFormatSelection(t *testing.T) {
 	}
 	if string(got) != string(content) {
 		t.Errorf("downloaded file = %q, want %q", got, content)
+	}
+}
+
+func TestOutputFolderSeparatesDownloadsAndConversions(t *testing.T) {
+	base := t.TempDir()
+	existingFile := filepath.Join(base, "old-video.mp4")
+	if err := os.WriteFile(existingFile, []byte("existing file"), 0600); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name     string
+		job      Job
+		category string
+	}{
+		{name: "video download", job: Job{Kind: "video"}, category: "Vídeos"},
+		{name: "audio download", job: Job{Kind: "audio"}, category: "Áudios"},
+		{name: "regular file download", job: Job{Kind: "file"}, category: "Arquivos"},
+		{name: "mp3 conversion", job: Job{Kind: "convert", Format: "MP3"}, category: "Áudios"},
+		{name: "mp4 conversion", job: Job{Kind: "convert", Format: "MP4"}, category: "Vídeos"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got, err := outputFolder(base, test.job)
+			if err != nil {
+				t.Fatalf("outputFolder() error = %v", err)
+			}
+			want := filepath.Join(base, test.category)
+			if got != want {
+				t.Errorf("outputFolder() = %q, want %q", got, want)
+			}
+			info, err := os.Stat(got)
+			if err != nil {
+				t.Fatalf("output folder was not created: %v", err)
+			}
+			if !info.IsDir() {
+				t.Errorf("output path %q is not a directory", got)
+			}
+		})
+	}
+
+	if _, err := os.Stat(existingFile); err != nil {
+		t.Errorf("existing file was moved or removed: %v", err)
+	}
+}
+
+func TestOutputFolderRejectsUnknownKindsAndConversionFormats(t *testing.T) {
+	for _, job := range []Job{
+		{Kind: "unknown"},
+		{Kind: "convert", Format: "AVI"},
+	} {
+		if folder, err := outputFolder(t.TempDir(), job); err == nil {
+			t.Errorf("outputFolder(%+v) = %q, want error", job, folder)
+		}
 	}
 }
 
