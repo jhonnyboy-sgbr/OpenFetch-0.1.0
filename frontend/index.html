@@ -6,6 +6,7 @@
   <meta name="theme-color" content="#0b0e19" />
   <title>OpenFetch — Downloads do seu jeito</title>
   <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./welcome.css" />
 </head>
 <body>
   <svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0;overflow:hidden">
@@ -45,16 +46,10 @@
     </aside>
 
     <main class="main">
-      <header class="topbar"><div class="breadcrumb"><span>OpenFetch</span><span class="slash">/</span><strong id="page-name">Home</strong></div><div class="top-actions"><span class="version-pill"><span class="pulse"></span> ALPHA 0.1.0</span><button id="top-folder" class="square-btn" title="Abrir pasta de downloads"><svg class="icon"><use href="#icon-folder"/></svg></button></div></header>
+      <header class="topbar"><div class="breadcrumb"><span>OpenFetch</span></div><div class="top-actions"><span class="version-pill"><span class="pulse"></span> ALPHA 0.1.0</span><button id="top-folder" class="square-btn" title="Abrir pasta de downloads"><svg class="icon"><use href="#icon-folder"/></svg></button></div></header>
       <div id="preview-notice" class="notice hidden">Prévia visual no navegador. Os downloads são ativados quando o aplicativo é executado no Wails.</div>
 
       <section class="page" id="page-home">
-        <div class="hero">
-          <div class="hero-orb orb-one"></div><div class="hero-orb orb-two"></div><div class="hero-lines"></div>
-          <div class="hero-content"><span class="hero-eyebrow"><svg class="icon"><use href="#icon-spark"/></svg> SEU NOVO HUB DE DOWNLOADS</span><h1>Baixe o que quiser.<br><em>Do seu jeito.</em></h1><p>Vídeos, músicas e arquivos em um só lugar.<br>Rápido, simples e sem complicação.</p></div>
-          <div class="hero-illustration" aria-hidden="true"><div class="floating-card fc-back"><svg class="icon"><use href="#icon-music"/></svg><span></span><span></span></div><div class="floating-card fc-main"><div class="fc-symbol"><svg class="icon"><use href="#icon-download"/></svg></div><div class="fc-line"></div><div class="fc-line short"></div><div class="fc-meter"><span></span></div></div><div class="fc-badge">↓</div></div>
-        </div>
-
         <div class="section-title"><div><h2>Novo download <span class="heading-glow">✦</span></h2><p>Cole um link para começar. Nós cuidamos do resto.</p></div></div>
         <div class="action-card">
           <label for="link-input" class="mini-label">LINK DO CONTEÚDO</label>
@@ -87,11 +82,52 @@
 
       <section class="page hidden" id="page-settings">
         <div class="page-heading"><div class="page-chip">PREFERÊNCIAS</div><h1>Configurações</h1><p>O OpenFetch do seu jeito.</p></div>
-        <div class="settings-box"><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-folder"/></svg></div><div class="settings-copy"><strong>Pasta de downloads</strong><p id="folder-path">Carregando...</p></div><button id="change-folder" class="outlined-btn">Alterar pasta</button></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-play"/></svg></div><div class="settings-copy"><strong>Cookies do YouTube (opcional)</strong><p id="cookies-status">Desativados nesta sessão. O arquivo original não será alterado.</p></div><button id="choose-cookies" class="outlined-btn">Selecionar arquivo</button><button id="remove-cookies" class="outlined-btn" disabled>Remover</button></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-grid"/></svg></div><div class="settings-copy"><strong>Componentes instalados</strong><p id="tools-description">Verificando FFmpeg e yt-dlp...</p></div><span id="tools-status" class="status-chip">—</span></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-archive"/></svg></div><div class="settings-copy"><strong>Histórico local</strong><p>Informações de download ficam salvas apenas neste computador.</p></div><span class="status-chip">Ativo</span></div></div>
+        <div class="settings-box"><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-folder"/></svg></div><div class="settings-copy"><strong>Pasta de downloads</strong><p id="folder-path">Carregando...</p></div><button id="change-folder" class="outlined-btn">Alterar pasta</button></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-play"/></svg></div><div class="settings-copy"><strong>Cookies do YouTube (opcional)</strong><p id="cookies-status">Desativados nesta sessão. O arquivo original não será alterado.</p></div><button id="cookie-help" class="outlined-btn">Como adicionar?</button><button id="choose-cookies" class="outlined-btn">Selecionar arquivo</button><button id="remove-cookies" class="outlined-btn" disabled>Remover</button></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-grid"/></svg></div><div class="settings-copy"><strong>Componentes instalados</strong><p id="tools-description">Verificando FFmpeg e yt-dlp...</p></div><span id="tools-status" class="status-chip">—</span></div><div class="settings-divider"></div><div class="settings-row"><div class="settings-icon"><svg class="icon"><use href="#icon-archive"/></svg></div><div class="settings-copy"><strong>Histórico local</strong><p>Informações de download ficam salvas apenas neste computador.</p></div><span class="status-chip">Ativo</span></div></div>
         <div class="settings-tip"><svg class="icon"><use href="#icon-spark"/></svg> O OpenFetch não contorna DRM. Baixe somente conteúdos que você tem permissão para salvar.</div>
       </section>
     </main>
   </div>
+  <dialog class="welcome-dialog" id="welcome-dialog" aria-labelledby="welcome-title" aria-describedby="welcome-description">
+    <div class="welcome-header">
+      <div class="welcome-mark"><svg class="icon"><use href="#icon-download"/></svg></div>
+      <button class="welcome-close" id="welcome-close" type="button" aria-label="Fechar apresentação do OpenFetch"><svg class="icon"><use href="#icon-close"/></svg></button>
+    </div>
+    <div class="welcome-content">
+      <span class="welcome-eyebrow">SEU HUB DE DOWNLOADS</span>
+      <h2 id="welcome-title">Bem-vindo ao OpenFetch</h2>
+      <p id="welcome-description">Vídeos, músicas e arquivos em um só lugar. Baixe e organize seus conteúdos com praticidade, direto no seu computador.</p>
+      <div class="welcome-features">
+        <div><svg class="icon"><use href="#icon-download"/></svg><span><strong>Downloads em vários formatos</strong><small>Vídeo MP4, áudio MP3 e arquivos no formato original.</small></span></div>
+        <div><svg class="icon"><use href="#icon-folder"/></svg><span><strong>Tudo organizado localmente</strong><small>Histórico e arquivos ficam no seu computador.</small></span></div>
+      </div>
+      <p class="welcome-note">O OpenFetch não contorna DRM. Baixe somente conteúdos que você tem autorização para salvar.</p>
+    </div>
+    <div class="welcome-footer">
+      <label class="welcome-optout"><input id="welcome-dont-show" type="checkbox" /> <span>Não mostrar novamente</span></label>
+      <button class="primary-btn" id="welcome-start" type="button">Começar a usar <svg class="icon"><use href="#icon-arrow"/></svg></button>
+    </div>
+  </dialog>
+  <dialog class="welcome-dialog cookie-tutorial-dialog" id="cookie-tutorial-dialog" aria-labelledby="cookie-tutorial-title" aria-describedby="cookie-tutorial-description">
+    <div class="welcome-header">
+      <div class="welcome-mark"><svg class="icon"><use href="#icon-play"/></svg></div>
+      <button class="welcome-close" id="cookie-tutorial-close" type="button" aria-label="Fechar tutorial de cookies"><svg class="icon"><use href="#icon-close"/></svg></button>
+    </div>
+    <div class="welcome-content">
+      <span class="welcome-eyebrow">AJUDA · COOKIES DO YOUTUBE</span>
+      <h2 id="cookie-tutorial-title">Como adicionar cookies</h2>
+      <p id="cookie-tutorial-description">Cookies podem ajudar o yt-dlp a acessar conteúdos que exigem uma sessão sua. Use somente cookies da sua própria conta.</p>
+      <ol class="cookie-tutorial-steps">
+        <li><strong>Exporte no seu navegador</strong><span>Com o YouTube aberto e sua conta conectada, use uma ferramenta confiável que exporte cookies localmente no formato Netscape (arquivo .txt).</span></li>
+        <li><strong>Proteja o arquivo</strong><span>Cookies funcionam como credenciais. Não envie, publique ou compartilhe esse arquivo; apague-o quando não precisar mais.</span></li>
+        <li><strong>Selecione no OpenFetch</strong><span>Volte às Configurações, clique em “Selecionar arquivo” e escolha o .txt exportado. A seleção vale apenas até fechar o app.</span></li>
+      </ol>
+      <p class="welcome-note">O OpenFetch valida o formato, usa apenas cookies de domínios youtube.com e cria uma cópia temporária para cada operação. O arquivo original não é alterado. O uso de cookies não garante acesso e não contorna DRM.</p>
+    </div>
+    <div class="welcome-footer cookie-tutorial-footer">
+      <span>Use apenas uma conta e conteúdos que você tem autorização para acessar.</span>
+      <button class="primary-btn" id="cookie-tutorial-done" type="button">Entendi</button>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="./app.js" defer></script>
 </body>

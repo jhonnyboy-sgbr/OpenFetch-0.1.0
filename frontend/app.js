@@ -7,10 +7,27 @@ const state = { page: 'home', format: 'video', jobs: [], settings: null, tools: 
 const icons = {video:'icon-play',audio:'icon-music',file:'icon-file',convert:'icon-convert'};
 const translations = {queued:'Na fila',downloading:'Baixando',converting:'Processando',completed:'Concluído',failed:'Falhou',cancelled:'Cancelado',interrupted:'Interrompido'};
 let toastTimer;
+const welcomeDismissedKey = 'openfetch.welcome.dismissed';
 
 function toast(msg) {
   const el = q('#toast'); el.textContent = msg; el.classList.add('show');
   clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 3900);
+}
+function closeWelcome() {
+  const dialog = q('#welcome-dialog');
+  if (q('#welcome-dont-show').checked) {
+    try { localStorage.setItem(welcomeDismissedKey, 'true'); }
+    catch { toast('Não foi possível salvar essa preferência.'); }
+  }
+  if (dialog.open) dialog.close();
+}
+function showWelcome() {
+  try {
+    if (localStorage.getItem(welcomeDismissedKey) === 'true') return;
+  } catch {
+    toast('Não foi possível carregar a preferência de apresentação.');
+  }
+  q('#welcome-dialog').showModal();
 }
 function errorText(err) { return err?.message || String(err || 'Erro inesperado'); }
 async function call(name, ...args) {
@@ -25,7 +42,6 @@ function switchPage(page) {
   state.page = page;
   qa('.page').forEach(el => el.classList.toggle('hidden', el.id !== `page-${page}`));
   qa('.nav-item').forEach(el => el.classList.toggle('active', el.dataset.page === page));
-  q('#page-name').textContent = ({home:'Home',downloads:'Downloads',converter:'Conversor',settings:'Configurações'})[page];
 }
 function chooseFormat(format) {
   state.format = format;
@@ -144,6 +160,9 @@ async function removeCookies() {
     await refresh();
   } catch(err) { toast(errorText(err)); }
 }
+function showCookieTutorial() {
+  q('#cookie-tutorial-dialog').showModal();
+}
 async function chooseMedia() {
   try {
     const file = await call('ChooseMediaFile'); if (!file) return;
@@ -171,6 +190,13 @@ async function repeatJob(id) {
 }
 
 function init() {
+  q('#welcome-close').addEventListener('click', closeWelcome);
+  q('#welcome-start').addEventListener('click', closeWelcome);
+  q('#welcome-dialog').addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeWelcome();
+  });
+  showWelcome();
   qa('.nav-item').forEach(b => b.addEventListener('click', () => switchPage(b.dataset.page)));
   qa('[data-navigate]').forEach(b => b.addEventListener('click', () => switchPage(b.dataset.navigate)));
   qa('.format-card').forEach(b => b.addEventListener('click', () => chooseFormat(b.dataset.format)));
@@ -181,6 +207,9 @@ function init() {
   q('#top-folder').addEventListener('click', folder);
   q('#downloads-folder').addEventListener('click', folder);
   q('#change-folder').addEventListener('click', chooseFolder);
+  q('#cookie-help').addEventListener('click', showCookieTutorial);
+  q('#cookie-tutorial-close').addEventListener('click', () => q('#cookie-tutorial-dialog').close());
+  q('#cookie-tutorial-done').addEventListener('click', () => q('#cookie-tutorial-dialog').close());
   q('#choose-cookies').addEventListener('click', chooseCookies);
   q('#remove-cookies').addEventListener('click', removeCookies);
   q('#choose-media').addEventListener('click', chooseMedia);

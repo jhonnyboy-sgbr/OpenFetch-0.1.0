@@ -1,0 +1,216 @@
+.welcome-dialog {
+  width: min(540px, calc(100vw - 32px));
+  max-width: none;
+  max-height: calc(100vh - 32px);
+  padding: 0;
+  overflow: auto;
+  color: #f4f4fd;
+  background: linear-gradient(145deg, #171a2c, #101522 72%);
+  border: 1px solid #474064;
+  border-radius: 20px;
+  box-shadow: 0 28px 100px #02030bcc, 0 0 70px #7652d52b;
+}
+.welcome-dialog::backdrop {
+  background: #050711c9;
+  backdrop-filter: blur(7px);
+}
+.welcome-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 25px 28px 0;
+}
+.welcome-mark {
+  width: 46px;
+  height: 46px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, #9b76ff, #6043d9);
+  border-radius: 14px;
+  box-shadow: 0 8px 26px #7048eb45;
+}
+.welcome-mark .icon {
+  width: 22px;
+  height: 22px;
+}
+.welcome-close {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  color: #9da4ba;
+  background: #ffffff08;
+  border: 1px solid #ffffff14;
+  border-radius: 10px;
+}
+.welcome-close:hover {
+  color: #fff;
+  background: #ffffff12;
+}
+.welcome-close .icon {
+  width: 17px;
+  height: 17px;
+}
+.welcome-content {
+  padding: 22px 34px 26px;
+}
+.welcome-eyebrow {
+  color: #b7a4ff;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.7px;
+}
+.welcome-content h2 {
+  margin: 10px 0 9px;
+  font-size: 25px;
+  letter-spacing: -.8px;
+}
+.welcome-content > p {
+  margin: 0;
+  color: #aeb3c8;
+  font-size: 13px;
+  line-height: 1.7;
+}
+.welcome-features {
+  display: grid;
+  gap: 12px;
+  margin: 22px 0;
+}
+.welcome-features > div {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px;
+  background: #ffffff06;
+  border: 1px solid #ffffff0d;
+  border-radius: 12px;
+}
+.welcome-features > div > .icon {
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  color: #b19aff;
+}
+.welcome-features strong,
+.welcome-features small {
+  display: block;
+}
+.welcome-features strong {
+  color: #e8e9f4;
+  font-size: 12px;
+}
+.welcome-features small {
+  margin-top: 4px;
+  color: #9098b0;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.welcome-content .welcome-note {
+  padding: 11px 13px;
+  color: #b5aacd;
+  background: #a18bff0c;
+  border-left: 2px solid #8e73e6;
+  border-radius: 0 8px 8px 0;
+  font-size: 11px;
+}
+.welcome-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 17px 28px 22px;
+  border-top: 1px solid #ffffff0d;
+}
+.welcome-optout {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #aeb3c8;
+  font-size: 11px;
+  cursor: pointer;
+}
+.welcome-optout input {
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: #9474ff;
+}
+.welcome-footer .primary-btn {
+  min-height: 40px;
+  padding: 0 15px;
+  white-space: nowrap;
+}
+.welcome-footer .primary-btn .icon {
+  width: 15px;
+  height: 15px;
+}
+.cookie-tutorial-dialog .welcome-content {
+  padding-bottom: 20px;
+}
+.cookie-tutorial-steps {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: cookie-step;
+}
+.cookie-tutorial-steps li {
+  position: relative;
+  min-height: 36px;
+  padding-left: 46px;
+  counter-increment: cookie-step;
+}
+.cookie-tutorial-steps li::before {
+  content: counter(cookie-step);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  color: #c9bcff;
+  background: #9574ee20;
+  border: 1px solid #9574ee45;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.cookie-tutorial-steps strong,
+.cookie-tutorial-steps span {
+  display: block;
+}
+.cookie-tutorial-steps strong {
+  margin-bottom: 4px;
+  color: #e8e9f4;
+  font-size: 12px;
+}
+.cookie-tutorial-steps span {
+  color: #9da4ba;
+  font-size: 11px;
+  line-height: 1.6;
+}
+.cookie-tutorial-footer > span {
+  max-width: 280px;
+  color: #969db3;
+  font-size: 10px;
+  line-height: 1.5;
+}
+@media (max-width: 520px) {
+  .welcome-header {
+    padding: 20px 20px 0;
+  }
+  .welcome-content {
+    padding: 19px 22px 22px;
+  }
+  .welcome-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    padding: 16px 22px 20px;
+  }
+  .welcome-footer .primary-btn {
+    width: 100%;
+  }
+}
