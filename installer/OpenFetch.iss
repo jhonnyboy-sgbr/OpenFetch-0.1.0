@@ -11,6 +11,7 @@ DefaultGroupName=OpenFetch
 DisableProgramGroupPage=yes
 OutputDir=..\release
 OutputBaseFilename=OpenFetch-Setup-0.1.0
+SetupIconFile=..\build\windows\icon.ico
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
