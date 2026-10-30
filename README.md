@@ -1,3 +1,7 @@
+<div align="center">
+  <img src="./banner.png" alt="OpenFetch Banner" width="100%">
+</div>
+
 # OpenFetch — versão 0.1.0 (alpha)
 
 Gerenciador desktop de downloads para Windows 10/11. Projeto Wails v2 + Go com interface HTML, CSS e JavaScript sem dependências de frontend. Base pronta para evoluir depois para React/TypeScript.
